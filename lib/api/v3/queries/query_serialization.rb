@@ -47,29 +47,6 @@ module API
           end
         end
 
-        def filters
-          represented.filters.map do |filter|
-            ::API::V3::Queries::Filters::QueryFilterInstanceRepresenter.new(filter)
-          end
-        end
-
-        def filters=(filters_hash)
-          represented.filters = []
-
-          filters_hash.each do |filter_attributes|
-            name = get_filter_name filter_attributes
-
-            filter = represented.filter_for name
-            if filter
-              filter_representer = ::API::V3::Queries::Filters::QueryFilterInstanceRepresenter.new(filter)
-
-              filter = filter_representer.from_hash filter_attributes
-              represented.filters << filter
-            else
-              raise API::Errors::InvalidRequestBody, "Could not read filter from: #{filter_attributes}"
-            end
-          end
-        end
 
         def sort_by
           return unless represented.sort_criteria

@@ -71,7 +71,9 @@ module API
         end
 
         def payload_representer
-          QueryPayloadRepresenter.new(represented, current_user: current_user)
+          QueryRepresenter
+            .new(represented, current_user: current_user)
+            .extend(::API::Utilities::PayloadRepresenter)
         end
 
         def schema_representer

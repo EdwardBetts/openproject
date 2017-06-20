@@ -54,12 +54,16 @@ module API
             api_v3_paths.query_filter_instance_schema(converted_name)
           end
 
-          link :filter do
-            {
-              href: api_v3_paths.query_filter(converted_name),
-              title: name
-            }
-          end
+          linked_resource :filter,
+                          getter: ->(*) {
+                            {
+                              href: api_v3_paths.query_filter(converted_name),
+                              title: name
+                            }
+                          },
+                          setter: ->(**) {
+                            # nothing for now, handled in QuerySerialization
+                          }
 
           linked_resource :operator,
                           getter: ->(*) {

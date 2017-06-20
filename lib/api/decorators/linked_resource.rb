@@ -80,7 +80,8 @@ module API
                    getter: getter,
                    setter: setter,
                    if: show_if,
-                   linked_resource: true
+                   linked_resource: true,
+                   writeable: true
         end
       end
     end

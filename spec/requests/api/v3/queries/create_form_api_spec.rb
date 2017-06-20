@@ -328,7 +328,8 @@ describe "POST /api/v3/queries/form", type: :request do
         {
           "_links" => {
             "filter" => {
-              "href" => "/api/v3/queries/filters/status"
+              "href" => "/api/v3/queries/filters/status",
+              "title" => "Status"
             },
             "operator" => {
               "href" => "/api/v3/queries/operators/%3D",

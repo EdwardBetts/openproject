@@ -39,6 +39,83 @@ module API
 
         prepend QuerySerialization
 
+        links :columns do
+          represented.columns.map do |column|
+            {
+              href: api_v3_paths.query_column(convert_attribute(column.name)),
+              title: column.caption
+            }
+          end
+        end
+
+        link :groupBy do
+          column = represented.group_by_column
+
+          if column
+            {
+              href: api_v3_paths.query_group_by(convert_attribute(column.name)),
+              title: column.caption
+            }
+          else
+            {
+              href: nil,
+              title: nil
+            }
+          end
+        end
+
+        links :sortBy do
+          map_with_sort_by_as_decorated(represented.sort_criteria_columns) do |sort_by|
+            {
+              href: api_v3_paths.query_sort_by(sort_by.converted_name, sort_by.direction_name),
+              title: sort_by.name
+            }
+          end
+        end
+
+        linked_property :project #, title_getter: ->(*) { nil }
+
+        property :name
+        property :filters,
+                 exec_context: :decorator#,
+                 #render_filter: ->(input, options) { binding.pry;
+                 #                                   input }# ,
+                 #getter: ->(*) { trimmed_filters filters }
+
+        property :display_sums, as: :sums
+        property :is_public, as: :public
+
+        # Timeline properties
+        property :timeline_visible
+
+        property :show_hierarchies
+
+        property :timeline_zoom_level
+
+        ##
+        # Uses the normal query's filter representation and removes the bits
+        # we don't want for a payload.
+        def trimmed_filters(filters)
+          filters.map(&:to_hash).map { |v| trim_links v }
+        end
+
+        def trim_links(value)
+          if value.is_a? ::Hash
+            ::Hash[value.except("_type", "name", "title", "schema").map { |k, v| [k, trim_links(v)] }]
+          elsif value.is_a? Array
+            value.map { |v| trim_links v }
+          else
+            value
+          end
+        end
+
+        #prepend QuerySerialization
+        #
+        def to_hash(*)
+
+          super
+        end
+
         attr_accessor :results,
                       :params
 
@@ -88,39 +165,39 @@ module API
           }
         end
 
-        links :columns do
-          represented.columns.map do |column|
-            {
-              href: api_v3_paths.query_column(convert_attribute(column.name)),
-              title: column.caption
-            }
-          end
-        end
+        #links :columns do
+        #  represented.columns.map do |column|
+        #    {
+        #      href: api_v3_paths.query_column(convert_attribute(column.name)),
+        #      title: column.caption
+        #    }
+        #  end
+        #end
 
-        link :groupBy do
-          column = represented.group_by_column
+        #link :groupBy do
+        #  column = represented.group_by_column
 
-          if column
-            {
-              href: api_v3_paths.query_group_by(convert_attribute(column.name)),
-              title: column.caption
-            }
-          else
-            {
-              href: nil,
-              title: nil
-            }
-          end
-        end
+        #  if column
+        #    {
+        #      href: api_v3_paths.query_group_by(convert_attribute(column.name)),
+        #      title: column.caption
+        #    }
+        #  else
+        #    {
+        #      href: nil,
+        #      title: nil
+        #    }
+        #  end
+        #end
 
-        links :sortBy do
-          map_with_sort_by_as_decorated(represented.sort_criteria_columns) do |sort_by|
-            {
-              href: api_v3_paths.query_sort_by(sort_by.converted_name, sort_by.direction_name),
-              title: sort_by.name
-            }
-          end
-        end
+        #links :sortBy do
+        #  map_with_sort_by_as_decorated(represented.sort_criteria_columns) do |sort_by|
+        #    {
+        #      href: api_v3_paths.query_sort_by(sort_by.converted_name, sort_by.direction_name),
+        #      title: sort_by.name
+        #    }
+        #  end
+        #end
 
         link :schema do
           href = if represented.project
@@ -166,13 +243,15 @@ module API
         end
 
         linked_property :user
-        linked_property :project
+        #linked_property :project
 
-        property :id
-        property :name
-        property :filters, exec_context: :decorator
+        property :id,
+         # skip_render: ->(options) { options[:decorator].payload? && !options[:binding][:writeable] },
+                 writeable: false
+        #property :name
+        #property :filters, exec_context: :decorator
 
-        property :is_public, as: :public
+        #property :is_public, as: :public
 
         property :sort_by,
                  exec_context: :decorator,
@@ -181,13 +260,12 @@ module API
                    embed_links
                  }
 
-        property :display_sums,
-                 as: :sums
+        #property :display_sums,
+        #         as: :sums
 
-        property :timeline_visible
-        property :timeline_zoom_level
+        #property :timeline_visible
 
-        property :show_hierarchies
+        #property :show_hierarchies
 
         property :starred
 
@@ -220,6 +298,31 @@ module API
 
         def _type
           'Query'
+        end
+
+        def filters
+          represented.filters.map do |filter|
+            ::API::V3::Queries::Filters::QueryFilterInstanceRepresenter
+              .new(filter)
+          end
+        end
+
+        def filters=(filters_hash)
+          represented.filters = []
+
+          filters_hash.each do |filter_attributes|
+            name = get_filter_name filter_attributes
+
+            filter = represented.filter_for name
+            if filter
+              filter_representer = ::API::V3::Queries::Filters::QueryFilterInstanceRepresenter.new(filter)
+
+              filter = filter_representer.from_hash filter_attributes
+              represented.filters << filter
+            else
+              raise API::Errors::InvalidRequestBody, "Could not read filter from: #{filter_attributes}"
+            end
+          end
         end
 
         private
