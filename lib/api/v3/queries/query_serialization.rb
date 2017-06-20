@@ -81,7 +81,7 @@ module API
           set_project_id(attributes)
           set_group_by(attributes)
           set_columns(attributes)
-          set_sort_criteria(attributes)
+          #set_sort_criteria(attributes)
         end
 
         def get_user_id(query_attributes)
@@ -104,7 +104,7 @@ module API
         end
 
         def set_sort_criteria(query_attributes)
-          raw_criteria = query_attributes.dig("_links", "sortBy")
+          raw_criteria = query_attributes#query_attributes.dig("_links", "sortBy")
 
           criteria = Array(raw_criteria).map do |sort_by|
             column_direction_from_href(sort_by)

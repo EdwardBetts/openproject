@@ -38,6 +38,7 @@ module API
         self_link
 
         prepend QuerySerialization
+        include API::Decorators::LinkedResource
 
         links :columns do
           represented.columns.map do |column|
@@ -64,14 +65,26 @@ module API
           end
         end
 
-        links :sortBy do
-          map_with_sort_by_as_decorated(represented.sort_criteria_columns) do |sort_by|
-            {
-              href: api_v3_paths.query_sort_by(sort_by.converted_name, sort_by.direction_name),
-              title: sort_by.name
-            }
-          end
-        end
+        #links :sortBy do
+        #  map_with_sort_by_as_decorated(represented.sort_criteria_columns) do |sort_by|
+        #    {
+        #      href: api_v3_paths.query_sort_by(sort_by.converted_name, sort_by.direction_name),
+        #      title: sort_by.name
+        #    }
+        #  end
+        #end
+        linked_resource :sortBy,
+                        getter: ->(*) {
+                          map_with_sort_by_as_decorated(represented.sort_criteria_columns) do |sort_by|
+                            {
+                              href: api_v3_paths.query_sort_by(sort_by.converted_name, sort_by.direction_name),
+                              title: sort_by.name
+                            }
+                          end
+                        },
+                        setter: ->(fragment:, **) {
+                          set_sort_criteria(fragment)
+                        }
 
         linked_property :project #, title_getter: ->(*) { nil }
 
@@ -253,7 +266,8 @@ module API
 
         #property :is_public, as: :public
 
-        property :sort_by,
+        property :sort_by_embedded,
+                 as: :sortBy,
                  exec_context: :decorator,
                  embedded: true,
                  if: ->(*) {

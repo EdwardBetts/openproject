@@ -18,6 +18,7 @@ module API
       end
 
       def representable_map(*)
+        binding.pry
         super.dup.reject! do |binding|
           binding[:writeable] == false
         end.each do |binding|
