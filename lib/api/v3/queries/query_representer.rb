@@ -75,6 +75,7 @@ module API
         #end
         linked_resource :sortBy,
                         getter: ->(*) {
+          binding.pry
                           map_with_sort_by_as_decorated(represented.sort_criteria_columns) do |sort_by|
                             {
                               href: api_v3_paths.query_sort_by(sort_by.converted_name, sort_by.direction_name),
@@ -83,6 +84,7 @@ module API
                           end
                         },
                         setter: ->(fragment:, **) {
+                          binding.pry
                           set_sort_criteria(fragment)
                         }
 

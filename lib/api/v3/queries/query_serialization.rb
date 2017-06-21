@@ -47,8 +47,8 @@ module API
           end
         end
 
-
-        def sort_by
+        def sort_by_embedded
+          binding.pry
           return unless represented.sort_criteria
 
           map_with_sort_by_as_decorated(represented.sort_criteria_columns) do |sort_by|

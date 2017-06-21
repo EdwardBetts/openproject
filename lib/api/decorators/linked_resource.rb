@@ -50,6 +50,7 @@ module API
             links[name] = fragment
           end
 
+          binding.pry
           hash['_links'].merge!(links)
         end
       end
