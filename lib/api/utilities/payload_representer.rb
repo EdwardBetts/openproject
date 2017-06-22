@@ -12,11 +12,11 @@ module API
       #end
 
       def representable_attrs
-        #super.dup.reject! do |key, binding|
-        #  binding[:writeable] == false
-        #end
+        super.dup.reject! do |key, binding|
+          binding[:writeable] == false
+        end
         #binding.pry
-        super
+        #super
 
         # Versuchen eine gemeinsame property zu definieren die:
         #  * Einen setter hat der über links funktioniert
@@ -28,26 +28,33 @@ module API
       end
 
       def representable_map(*)
-        binding.pry
-        x = super
+        #binding.pry
+        #x = super
 
-        links = x.detect { |binding| binding.name == 'links' }
+        #links = x.detect { |binding| binding.name == 'links' }
 
-        links[:render_filter] << link_render_block
+        #links[:render_filter] << link_render_block
 
-        x
+        #x
+        writeable = super.dup.reject! do |binding|
+          binding[:writeable] == false
+        end
+
+        writeable.each do |binding|
+          binding[:render_filter] << nested_payload_block
+        end
       end
 
-      def link_render_block
-        ->(input, options) {
-          binding.pry
+      #def link_render_block
+      #  ->(input, options) {
+      #    binding.pry
 
-          input
+      #    input
 
 
 
-        }
-      end
+      #  }
+      #end
 
       #  writeable = super.dup.reject! do |binding|
       #    binding[:writeable] == false
@@ -58,19 +65,20 @@ module API
       #  end
       #end
 
-      #def nested_payload_block
-      #  ->(input, options) {
-      #    if input.is_a?(::API::Decorators::Single)
-      #      input.extend(::API::Utilities::PayloadRepresenter)
-      #    elsif input.is_a?(Array) && input.all? { |rep| rep.is_a? ::API::Decorators::Single }
-      #      input.each { |rep| rep.extend ::API::Utilities::PayloadRepresenter }
-      #    elsif options[:binding].name == 'links'
-      #      []
-      #    else
-      #     input
-      #    end
-      #  }
-      #end
+      def nested_payload_block
+        ->(input, options) {
+          if input.is_a?(::API::Decorators::Single)
+            input.extend(::API::Utilities::PayloadRepresenter)
+          elsif input.is_a?(Array) && input.all? { |rep| rep.is_a? ::API::Decorators::Single }
+            input.each { |rep| rep.extend ::API::Utilities::PayloadRepresenter }
+          #elsif options[:binding].name == 'links'
+          #  []
+       #    links[:render_filter] << link_render_block
+          else
+           input
+          end
+        }
+      end
     end
   end
 end

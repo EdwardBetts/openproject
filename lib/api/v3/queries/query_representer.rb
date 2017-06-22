@@ -73,20 +73,20 @@ module API
         #    }
         #  end
         #end
-        linked_resource :sortBy,
-                        getter: ->(*) {
-          binding.pry
-                          map_with_sort_by_as_decorated(represented.sort_criteria_columns) do |sort_by|
-                            {
-                              href: api_v3_paths.query_sort_by(sort_by.converted_name, sort_by.direction_name),
-                              title: sort_by.name
-                            }
-                          end
-                        },
-                        setter: ->(fragment:, **) {
-                          binding.pry
-                          set_sort_criteria(fragment)
-                        }
+        #linked_resource :sortBy,
+        #                getter: ->(*) {
+        #  binding.pry
+        #                  map_with_sort_by_as_decorated(represented.sort_criteria_columns) do |sort_by|
+        #                    {
+        #                      href: api_v3_paths.query_sort_by(sort_by.converted_name, sort_by.direction_name),
+        #                      title: sort_by.name
+        #                    }
+        #                  end
+        #                },
+        #                setter: ->(fragment:, **) {
+        #                  binding.pry
+        #                  set_sort_criteria(fragment)
+        #                }
 
         linked_property :project #, title_getter: ->(*) { nil }
 
@@ -268,13 +268,46 @@ module API
 
         #property :is_public, as: :public
 
-        property :sort_by_embedded,
-                 as: :sortBy,
-                 exec_context: :decorator,
-                 embedded: true,
-                 if: ->(*) {
-                   embed_links
-                 }
+        #property :sort_by_embedded,
+        #         as: :sortBy,
+        #         exec_context: :decorator,
+        #         embedded: true,
+        #         if: ->(*) {
+        #           embed_links
+        #         }
+        resources :sortBy,
+                  getter: ->(*) {
+                    sort_by
+                  },
+                  setter: ->(fragment:, **) {
+                    set_sort_criteria(fragment)
+                  },
+                  link: ->(*) {
+                    map_with_sort_by_as_decorated(represented.sort_criteria_columns) do |sort_by|
+                      {
+                        href: api_v3_paths.query_sort_by(sort_by.converted_name, sort_by.direction_name),
+                        title: sort_by.name
+                      }
+                    end
+                  },
+                  show_if: ->(*) {
+                    embed_links
+                  }
+
+        #linked_resource :sortBy,
+        #                getter: ->(*) {
+        #  binding.pry
+        #                  map_with_sort_by_as_decorated(represented.sort_criteria_columns) do |sort_by|
+        #                    {
+        #                      href: api_v3_paths.query_sort_by(sort_by.converted_name, sort_by.direction_name),
+        #                      title: sort_by.name
+        #                    }
+        #                  end
+        #                },
+        #                setter: ->(fragment:, **) {
+        #                  binding.pry
+        #                  set_sort_criteria(fragment)
+        #                }
 
         #property :display_sums,
         #         as: :sums

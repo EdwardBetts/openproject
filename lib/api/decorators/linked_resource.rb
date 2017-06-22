@@ -50,7 +50,6 @@ module API
             links[name] = fragment
           end
 
-          binding.pry
           hash['_links'].merge!(links)
         end
       end
@@ -67,7 +66,12 @@ module API
           hash[name] = fragment
         end
 
-        super
+        # TODO: improve
+        embed_links_before = @embed_links
+        @embed_links = true
+        ret = super
+        @embed_links = embed_links_before
+        ret
       end
 
       module ClassMethods
@@ -82,6 +86,42 @@ module API
                    setter: setter,
                    if: show_if,
                    linked_resource: true,
+                   writeable: true
+        end
+
+        def resource(name,
+                     getter:,
+                     setter:,
+                     link:,
+                     show_if: ->(*) { true })
+
+          link(name, &link)
+
+          property name,
+                   exec_context: :decorator,
+                   getter: getter,
+                   setter: setter,
+                   if: show_if,
+                   linked_resource: true,
+                   embedded: true,
+                   writeable: true
+        end
+
+        def resources(name,
+                      getter:,
+                      setter:,
+                      link:,
+                      show_if: ->(*) { true })
+
+          links(name, &link)
+
+          property name,
+                   exec_context: :decorator,
+                   getter: getter,
+                   setter: setter,
+                   if: show_if,
+                   linked_resource: true,
+                   embedded: true,
                    writeable: true
         end
       end
