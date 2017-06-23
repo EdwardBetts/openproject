@@ -55,20 +55,6 @@ module API
       end
 
       module ClassMethods
-        def linked_resource(name,
-                            getter:,
-                            setter:,
-                            show_if: ->(*) { true })
-
-          property name,
-                   exec_context: :decorator,
-                   getter: getter,
-                   setter: setter,
-                   if: show_if,
-                   linked_resource: true,
-                   writeable: true
-        end
-
         def resource(name,
                      getter:,
                      setter:,
@@ -111,6 +97,19 @@ module API
                    linked_resource: true,
                    embedded: embedded,
                    writeable: writeable
+        end
+
+        def resource_link(name,
+                          setter:,
+                          getter:,
+                          show_if: ->(*) { true })
+
+          resource(name,
+                   getter: ->(*) {},
+                   setter: setter,
+                   link: getter,
+                   show_if: show_if,
+                   embedded: false)
         end
       end
     end

@@ -43,42 +43,35 @@ module API
             api_v3_paths.query_filter_instance_schema(converted_name)
           end
 
-          resource :filter,
-                   link: ->(*) {
-                     {
-                       href: api_v3_paths.query_filter(converted_name),
-                       title: name
-                     }
-                   },
-                   setter: ->(**) {
-                     # nothing for now, handled in QueryRepresenter
-                   },
-                   getter: ->(*) {
-                     # not embedded anyway
-                   },
-                   skip_render: ->(*) { true }
+          resource_link :filter,
+                        getter: ->(*) {
+                          {
+                            href: api_v3_paths.query_filter(converted_name),
+                            title: name
+                          }
+                        },
+                        setter: ->(**) {
+                          # nothing for now, handled in QueryRepresenter
+                        }
 
-          resource :operator,
-                   link: ->(*) {
-                     hash = {
-                       href: api_v3_paths.query_operator(CGI.escape(represented.operator))
-                     }
+          resource_link :operator,
+                        getter: ->(*) {
+                          hash = {
+                            href: api_v3_paths.query_operator(CGI.escape(represented.operator))
+                          }
 
-                     hash[:title] = represented.operator_class.human_name if represented.operator_class.present?
-                     hash
-                   },
-                   setter: ->(fragment:, **) {
-                     next unless fragment
+                          hash[:title] = represented.operator_class.human_name if represented.operator_class.present?
+                          hash
+                        },
+                        setter: ->(fragment:, **) {
+                          next unless fragment
 
-                     represented.operator = ::API::Utilities::ResourceLinkParser.parse_id fragment["href"],
-                                                                                          property: 'operator',
-                                                                                          expected_version: '3',
-                                                                                          expected_namespace: 'queries/operators'
-                   },
-                   getter: ->(*) {
-                     # not embedded anyway
-                   },
-                   skip_render: ->(*) { true }
+                          represented.operator = ::API::Utilities::ResourceLinkParser
+                                                 .parse_id fragment["href"],
+                                                           property: 'operator',
+                                                           expected_version: '3',
+                                                           expected_namespace: 'queries/operators'
+                        }
 
           resources :values,
                     link: ->(*) {
