@@ -39,21 +39,6 @@ module API
         base.extend ClassMethods
       end
 
-      def to_hash(*)
-        super.tap do |hash|
-          links = {}
-          representable_attrs.find_all do |dfn|
-            next unless dfn[:linked_resource]
-            name = dfn[:as] ? dfn[:as].(nil) : dfn.name
-            fragment = hash.delete(name)
-            next unless fragment
-            links[name] = fragment
-          end
-
-          hash['_links'].merge!(links)
-        end
-      end
-
       def from_hash(hash, *)
         return super unless hash['_links']
 
@@ -89,7 +74,9 @@ module API
                      setter:,
                      link:,
                      show_if: ->(*) { true },
-                     skip_render: nil)
+                     skip_render: nil,
+                     embedded: true,
+                     writeable: true)
 
           link(name, &link)
 
@@ -100,8 +87,8 @@ module API
                    if: show_if,
                    skip_render: skip_render,
                    linked_resource: true,
-                   embedded: true,
-                   writeable: true
+                   embedded: embedded,
+                   writeable: writeable
         end
 
         def resources(name,
@@ -109,7 +96,9 @@ module API
                       setter:,
                       link:,
                       show_if: ->(*) { true },
-                      skip_render: nil)
+                      skip_render: nil,
+                      embedded: true,
+                      writeable: true)
 
           links(name, &link)
 
@@ -120,8 +109,8 @@ module API
                    if: show_if,
                    skip_render: skip_render,
                    linked_resource: true,
-                   embedded: true,
-                   writeable: true
+                   embedded: embedded,
+                   writeable: writeable
         end
       end
     end
