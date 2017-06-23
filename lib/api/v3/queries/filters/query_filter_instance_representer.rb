@@ -62,7 +62,7 @@ module API
                             }
                           },
                           setter: ->(**) {
-                            # nothing for now, handled in QuerySerialization
+                            # nothing for now, handled in QueryRepresenter
                           }
 
           linked_resource :operator,

@@ -66,12 +66,7 @@ module API
           hash[name] = fragment
         end
 
-        # TODO: improve
-        embed_links_before = @embed_links
-        @embed_links = true
-        ret = super
-        @embed_links = embed_links_before
-        ret
+        super
       end
 
       module ClassMethods
@@ -93,7 +88,8 @@ module API
                      getter:,
                      setter:,
                      link:,
-                     show_if: ->(*) { true })
+                     show_if: ->(*) { true },
+                     skip_render: nil)
 
           link(name, &link)
 
@@ -102,6 +98,7 @@ module API
                    getter: getter,
                    setter: setter,
                    if: show_if,
+                   skip_render: skip_render,
                    linked_resource: true,
                    embedded: true,
                    writeable: true
@@ -111,7 +108,8 @@ module API
                       getter:,
                       setter:,
                       link:,
-                      show_if: ->(*) { true })
+                      show_if: ->(*) { true },
+                      skip_render: nil)
 
           links(name, &link)
 
@@ -120,6 +118,7 @@ module API
                    getter: getter,
                    setter: setter,
                    if: show_if,
+                   skip_render: skip_render,
                    linked_resource: true,
                    embedded: true,
                    writeable: true
