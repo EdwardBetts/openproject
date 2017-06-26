@@ -32,23 +32,22 @@ describe ::API::V3::WorkPackages::WorkPackagePayloadRepresenter do
   include API::V3::Utilities::PathHelper
 
   let(:work_package) do
-    FactoryGirl.build(:work_package,
-                      start_date: Date.today.to_datetime,
-                      due_date: Date.today.to_datetime,
-                      created_at: DateTime.now,
-                      updated_at: DateTime.now)
+    FactoryGirl.build_stubbed(:work_package,
+                              start_date: Date.today.to_datetime,
+                              due_date: Date.today.to_datetime,
+                              created_at: DateTime.now,
+                              updated_at: DateTime.now,
+                              type: FactoryGirl.build_stubbed(:type))
   end
 
   let(:user) do
     FactoryGirl.build_stubbed(:user)
   end
 
-  let(:representer) { ::API::V3::WorkPackages::WorkPackagePayloadRepresenter.create(work_package, current_user: user) }
-#  let(:representer) do
-#    ::API::V3::WorkPackages::WorkPackageRepresenter
-#      .create(work_package, current_user: user)
-#      .extend(::API::Utilities::PayloadRepresenter)
-#  end
+  let(:representer) do
+    ::API::V3::WorkPackages::WorkPackagePayloadRepresenter
+      .create(work_package, current_user: user)
+  end
 
   before do
     allow(work_package).to receive(:lock_version).and_return(1)
@@ -207,7 +206,11 @@ describe ::API::V3::WorkPackages::WorkPackagePayloadRepresenter do
         end
 
         context 'no due date' do
-          let(:work_package) { FactoryGirl.build_stubbed(:work_package, due_date: nil) }
+          let(:work_package) do
+            FactoryGirl.build_stubbed(:work_package,
+                                      type: FactoryGirl.build_stubbed(:type),
+                                      due_date: nil)
+          end
 
           it 'renders as null' do
             is_expected.to be_json_eql(nil.to_json).at_path('date')
@@ -363,7 +366,7 @@ describe ::API::V3::WorkPackages::WorkPackagePayloadRepresenter do
 
     describe 'custom fields' do
       it 'uses a CustomFieldInjector' do
-        expected_method = :create_value_representer_for_property_patching
+        expected_method = :create_value_representer
         expect(::API::V3::Utilities::CustomFieldInjector).to receive(expected_method)
           .and_call_original
         representer.to_json

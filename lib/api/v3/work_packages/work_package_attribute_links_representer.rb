@@ -53,51 +53,6 @@ module API
         end
 
         self.as_strategy = ::API::Utilities::CamelCasingStrategy.new
-
-        def self.linked_property(property,
-                                 namespace: property.to_s.pluralize,
-                                 association: "#{property}_id",
-                                 path: property,
-                                 show_if: true)
-
-          property property,
-                   getter: ->(represented:, **) {
-                     ::API::Decorators::LinkObject.new(represented,
-                                                       property_name: property,
-                                                       path: path,
-                                                       namespace: namespace,
-                                                       getter: association)
-                   },
-                   setter: ->(fragment:, represented:, **) {
-                     link = ::API::Decorators::LinkObject.new(represented,
-                                                              property_name: property,
-                                                              path: path,
-                                                              namespace: namespace,
-                                                              getter: association)
-
-                     link.from_hash(fragment)
-                   },
-                   if: show_if
-        end
-
-        linked_property :type
-        linked_property :status
-        linked_property :assignee,
-                        namespace: :users,
-                        association: :assigned_to_id,
-                        path: :user
-        linked_property :responsible,
-                        namespace: :users,
-                        association: :responsible_id,
-                        path: :user
-        #linked_property :category
-        linked_property :version,
-                        association: :fixed_version_id
-        linked_property :priority
-        linked_property :parent,
-                        path: :work_package,
-                        namespace: :work_packages
-        linked_property :project
       end
     end
   end

@@ -429,7 +429,7 @@ describe ::API::V3::Utilities::CustomFieldInjector do
   describe '#inject_patchable_link_value' do
     let(:base_class) { Class.new(::API::Decorators::Single) }
     let(:modified_class) do
-      described_class.create_value_representer_for_link_patching(represented, base_class)
+      described_class.create_value_representer(represented, base_class)
     end
     let(:represented) do
       double('represented',
@@ -437,11 +437,13 @@ describe ::API::V3::Utilities::CustomFieldInjector do
     end
     let(:custom_value) { double('CustomValue', value: value, typed_value: typed_value) }
     let(:value) { '' }
+    let(:user) { FactoryGirl.build_stubbed(:user) }
     let(:typed_value) { value }
-    subject { "{ \"_links\": #{modified_class.new(represented, current_user: nil).to_json} }" }
+    subject { "{ \"_links\": #{modified_class.new(represented, current_user: user).to_json} }" }
 
     before do
       allow(represented).to receive(:custom_value_for).with(custom_field).and_return(custom_value)
+      allow(represented).to receive(:"custom_field_#{custom_field.id}").and_return(typed_value)
     end
 
     context 'reading' do

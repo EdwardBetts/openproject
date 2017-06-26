@@ -111,6 +111,51 @@ module API
                    show_if: show_if,
                    embedded: false)
         end
+
+        def associated_resource(name,
+                                as: name,
+                                representer: nil,
+                                v3_path: name,
+                                getter: associated_resource_default_getter(name, representer),
+                                setter: associated_resource_default_setter(name, v3_path),
+                                link: associated_resource_default_link(name, v3_path))
+
+          resource(as,
+                   getter: getter,
+                   setter: setter,
+                   link: link)
+        end
+
+        def associated_resource_default_getter(name,
+                                               representer)
+          representer ||= "::API::V3::#{name.to_s.pluralize.camelize}::#{name.to_s.camelize}Representer".constantize
+
+          ->(*) {
+            return unless represented.send(name)
+
+            representer.new(represented.send(name), current_user: current_user)
+          }
+        end
+
+        def associated_resource_default_setter(name, v3_path)
+          ->(fragment:, **) {
+            link = ::API::Decorators::LinkObject.new(represented,
+                                                     path: v3_path,
+                                                     property_name: name)
+
+            link.from_hash(fragment)
+          }
+        end
+
+        def associated_resource_default_link(name, v3_path)
+          ->(*) {
+            ::API::Decorators::LinkObject
+              .new(represented,
+                   path: v3_path,
+                   property_name: name)
+              .to_hash
+          }
+        end
       end
     end
   end

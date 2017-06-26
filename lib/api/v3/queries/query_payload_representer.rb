@@ -28,13 +28,11 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-require 'roar/decorator'
-require 'roar/json/hal'
-
 module API
   module V3
     module Queries
       class QueryPayloadRepresenter < QueryRepresenter
+
         #def payload?
         #  true
         #end
@@ -43,11 +41,11 @@ module API
         #  super
         #end
 
-        def self.map
-          super.dup.reject! do |binding|
-            binding[:writeable] == false
-          end
-        end
+        #def self.map
+        #  super.dup.reject! do |binding|
+        #    binding[:writeable] == false
+        #  end
+        #end
 
         #def representable_attrs
         #  super.except('links')

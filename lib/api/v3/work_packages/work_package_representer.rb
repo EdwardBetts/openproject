@@ -291,11 +291,6 @@ module API
           }
         end
 
-        linked_property :parent,
-                        path: :work_package,
-                        title_getter: ->(*) { represented.parent.subject },
-                        show_if: ->(*) { represented.parent.nil? || represented.parent.visible? }
-
         link :timeEntries do
           next unless current_user_allowed_to(:view_time_entries, context: represented.project)
           {
@@ -304,49 +299,6 @@ module API
             title: 'Time entries'
           }
         end
-
-        resource :category,
-                 getter: ->(*) {
-                   return unless represented.category
-
-                   ::API::V3::Categories::CategoryRepresenter.new(represented.category, current_user: current_user)
-                 },
-                 setter: ->(fragment:, **) {
-                   link = ::API::Decorators::LinkObject.new(represented,
-                                                            property_name: 'category')
-
-                   link.from_hash(fragment)
-                 },
-                 link: ->(*) {
-                   if represented.category
-                     {
-                       href: api_v3_paths.category(represented.category_id),
-                       title: represented.category.name
-                     }
-                   else
-                     {
-                       href: nil
-                     }
-                   end
-                 }
-
-        #linked_property :category, embed_as: ::API::V3::Categories::CategoryRepresenter
-        linked_property :priority, embed_as: ::API::V3::Priorities::PriorityRepresenter
-        linked_property :project, embed_as: ::API::V3::Projects::ProjectRepresenter
-
-        linked_property :version,
-                        getter: :fixed_version,
-                        title_getter: ->(*) {
-                          represented.fixed_version.to_s
-                        },
-                        embed_as: ::API::V3::Versions::VersionRepresenter
-
-        linked_property :type, embed_as: ::API::V3::Types::TypeRepresenter
-        linked_property :status, embed_as: ::API::V3::Statuses::StatusRepresenter
-
-        linked_property :author, path: :user, embed_as: ::API::V3::Users::UserRepresenter
-        linked_property :responsible, path: :user, embed_as: ::API::V3::Users::UserRepresenter
-        linked_property :assigned_to, path: :user, embed_as: ::API::V3::Users::UserRepresenter
 
         links :children do
           next if visible_children.empty?
@@ -373,6 +325,10 @@ module API
                  writeable: false
 
         property :lock_version,
+                 render_nil: true,
+                 getter: ->(*) {
+                   lock_version.to_i
+                 },
                  writeable: true
 
         property :subject,
@@ -418,7 +374,7 @@ module API
                    datetime_formatter.format_date(represented.due_date, allow_nil: true)
                  end,
                  render_nil: true,
-                 if: ->(options) {
+                 if: ->(*) {
                    represented.milestone?
                  },
                  writeable: true
@@ -473,6 +429,38 @@ module API
                  embedded: true,
                  exec_context: :decorator,
                  if: ->(*) { embed_links }
+
+        associated_resource :category
+
+        associated_resource :type
+
+        associated_resource :priority
+
+        associated_resource :project
+
+        associated_resource :status
+
+        associated_resource :author,
+                            v3_path: :user,
+                            representer: ::API::V3::Users::UserRepresenter
+
+        associated_resource :responsible,
+                            v3_path: :user,
+                            representer: ::API::V3::Users::UserRepresenter
+
+        associated_resource :assigned_to,
+                            as: :assignee,
+                            v3_path: :user,
+                            representer: ::API::V3::Users::UserRepresenter
+
+        associated_resource :fixed_version,
+                            as: :version,
+                            v3_path: :version,
+                            representer: ::API::V3::Versions::VersionRepresenter
+
+        associated_resource :parent,
+                            v3_path: :work_package,
+                            representer: ::API::V3::WorkPackages::WorkPackageRepresenter
 
         def _type
           'WorkPackage'
