@@ -38,7 +38,17 @@ describe ::API::V3::WorkPackages::WorkPackagePayloadRepresenter do
                       created_at: DateTime.now,
                       updated_at: DateTime.now)
   end
-  let(:representer) { described_class.create(work_package) }
+
+  let(:user) do
+    FactoryGirl.build_stubbed(:user)
+  end
+
+  let(:representer) { ::API::V3::WorkPackages::WorkPackagePayloadRepresenter.create(work_package, current_user: user) }
+#  let(:representer) do
+#    ::API::V3::WorkPackages::WorkPackageRepresenter
+#      .create(work_package, current_user: user)
+#      .extend(::API::Utilities::PayloadRepresenter)
+#  end
 
   before do
     allow(work_package).to receive(:lock_version).and_return(1)
@@ -249,7 +259,9 @@ describe ::API::V3::WorkPackages::WorkPackagePayloadRepresenter do
       describe 'status' do
         let(:status) { FactoryGirl.build_stubbed(:status) }
 
-        before do work_package.status = status end
+        before do
+          work_package.status = status
+        end
 
         it_behaves_like 'linked property' do
           let(:property) { 'status' }
@@ -264,7 +276,9 @@ describe ::API::V3::WorkPackages::WorkPackagePayloadRepresenter do
         let(:link) { "/api/v3/users/#{user.id}" }
 
         describe 'assignee' do
-          before do work_package.assigned_to = user end
+          before do
+            work_package.assigned_to = user
+          end
 
           it_behaves_like 'linked property' do
             let(:property) { 'assignee' }
@@ -274,7 +288,9 @@ describe ::API::V3::WorkPackages::WorkPackagePayloadRepresenter do
         end
 
         describe 'responsible' do
-          before do work_package.responsible = user end
+          before do
+            work_package.responsible = user
+          end
 
           it_behaves_like 'linked property' do
             let(:property) { 'responsible' }
@@ -287,7 +303,9 @@ describe ::API::V3::WorkPackages::WorkPackagePayloadRepresenter do
       describe 'version' do
         let(:version) { FactoryGirl.build_stubbed(:version) }
 
-        before do work_package.fixed_version = version end
+        before do
+          work_package.fixed_version = version
+        end
 
         it_behaves_like 'linked property' do
           let(:property) { 'version' }
@@ -300,7 +318,9 @@ describe ::API::V3::WorkPackages::WorkPackagePayloadRepresenter do
       describe 'category' do
         let(:category) { FactoryGirl.build_stubbed(:category) }
 
-        before do work_package.category = category end
+        before do
+          work_package.category = category
+        end
 
         it_behaves_like 'linked property' do
           let(:property) { 'category' }
@@ -313,7 +333,9 @@ describe ::API::V3::WorkPackages::WorkPackagePayloadRepresenter do
       describe 'priority' do
         let(:priority) { FactoryGirl.build_stubbed(:priority) }
 
-        before do work_package.priority = priority end
+        before do
+          work_package.priority = priority
+        end
 
         it_behaves_like 'linked property' do
           let(:property) { 'priority' }
@@ -326,7 +348,9 @@ describe ::API::V3::WorkPackages::WorkPackagePayloadRepresenter do
       describe 'parent' do
         let(:parent) { FactoryGirl.build_stubbed(:work_package) }
 
-        before do work_package.parent = parent end
+        before do
+          work_package.parent = parent
+        end
 
         it_behaves_like 'linked property' do
           let(:property) { 'parent' }
@@ -438,11 +462,11 @@ describe ::API::V3::WorkPackages::WorkPackagePayloadRepresenter do
       let(:path) { api_v3_paths.send(attribute_name, id) }
       let(:association_name) { attribute_name + '_id' }
       let(:id) { work_package.send(association_name) + 1 }
-      let(:links) {
+      let(:links) do
         Hash.new.tap do |h|
           h[attribute_name] = href
         end
-      }
+      end
       let(:representer_attribute) { subject.send(association_name) }
 
       describe 'with a valid href' do
