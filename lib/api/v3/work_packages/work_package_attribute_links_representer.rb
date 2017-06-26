@@ -90,7 +90,7 @@ module API
                         namespace: :users,
                         association: :responsible_id,
                         path: :user
-        linked_property :category
+        #linked_property :category
         linked_property :version,
                         association: :fixed_version_id
         linked_property :priority

@@ -77,6 +77,8 @@ class MembersController < ApplicationController
 
   def update
     member = update_member_from_params
+
+    binding.pry
     if member.save
       flash[:notice] = l(:notice_successful_update)
     else

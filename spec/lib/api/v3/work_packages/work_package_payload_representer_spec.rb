@@ -207,7 +207,7 @@ describe ::API::V3::WorkPackages::WorkPackagePayloadRepresenter do
         end
 
         context 'no due date' do
-          let(:work_package) { FactoryGirl.build(:work_package, due_date: nil) }
+          let(:work_package) { FactoryGirl.build_stubbed(:work_package, due_date: nil) }
 
           it 'renders as null' do
             is_expected.to be_json_eql(nil.to_json).at_path('date')

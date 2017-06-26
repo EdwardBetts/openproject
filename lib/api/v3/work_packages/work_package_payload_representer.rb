@@ -35,6 +35,7 @@ module API
         include ::API::Utilities::PayloadRepresenter
 
         property :done_ratio,
+                 as: :percentageDone,
                  if: ->(*) { Setting.work_package_done_ratio == 'field' },
                  inherit: true
 #        include Roar::JSON::HAL

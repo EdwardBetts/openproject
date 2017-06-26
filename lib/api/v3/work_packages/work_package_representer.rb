@@ -28,13 +28,12 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-require 'roar/decorator'
-require 'roar/json/hal'
-
 module API
   module V3
     module WorkPackages
       class WorkPackageRepresenter < ::API::Decorators::Single
+        include API::Decorators::LinkedResource
+
         class << self
           def create_class(work_package, embed_links: false)
             injector_class = ::API::V3::Utilities::CustomFieldInjector
@@ -73,7 +72,7 @@ module API
 
         link :schema do
           {
-            href: api_v3_paths.work_package_schema(represented.project.id, represented.type.id)
+            href: api_v3_paths.work_package_schema(represented.project_id, represented.type_id)
           }
         end
 
@@ -164,13 +163,6 @@ module API
             title: "Configure form"
           }
         end
-
-        linked_property :type, embed_as: ::API::V3::Types::TypeRepresenter
-        linked_property :status, embed_as: ::API::V3::Statuses::StatusRepresenter
-
-        linked_property :author, path: :user, embed_as: ::API::V3::Users::UserRepresenter
-        linked_property :responsible, path: :user, embed_as: ::API::V3::Users::UserRepresenter
-        linked_property :assigned_to, path: :user, embed_as: ::API::V3::Users::UserRepresenter
 
         link :activities do
           {
@@ -313,7 +305,32 @@ module API
           }
         end
 
-        linked_property :category, embed_as: ::API::V3::Categories::CategoryRepresenter
+        resource :category,
+                 getter: ->(*) {
+                   return unless represented.category
+
+                   ::API::V3::Categories::CategoryRepresenter.new(represented.category, current_user: current_user)
+                 },
+                 setter: ->(fragment:, **) {
+                   link = ::API::Decorators::LinkObject.new(represented,
+                                                            property_name: 'category')
+
+                   link.from_hash(fragment)
+                 },
+                 link: ->(*) {
+                   if represented.category
+                     {
+                       href: api_v3_paths.category(represented.category_id),
+                       title: represented.category.name
+                     }
+                   else
+                     {
+                       href: nil
+                     }
+                   end
+                 }
+
+        #linked_property :category, embed_as: ::API::V3::Categories::CategoryRepresenter
         linked_property :priority, embed_as: ::API::V3::Priorities::PriorityRepresenter
         linked_property :project, embed_as: ::API::V3::Projects::ProjectRepresenter
 
@@ -323,6 +340,13 @@ module API
                           represented.fixed_version.to_s
                         },
                         embed_as: ::API::V3::Versions::VersionRepresenter
+
+        linked_property :type, embed_as: ::API::V3::Types::TypeRepresenter
+        linked_property :status, embed_as: ::API::V3::Statuses::StatusRepresenter
+
+        linked_property :author, path: :user, embed_as: ::API::V3::Users::UserRepresenter
+        linked_property :responsible, path: :user, embed_as: ::API::V3::Users::UserRepresenter
+        linked_property :assigned_to, path: :user, embed_as: ::API::V3::Users::UserRepresenter
 
         links :children do
           next if visible_children.empty?
@@ -371,12 +395,9 @@ module API
                  getter: ->(*) do
                    datetime_formatter.format_date(represented.start_date, allow_nil: true)
                  end,
-                 setter: ->(fragment:, **) {
-                   represented.start_date = datetime_formatter.parse_date(fragment, allow_nil: true)
-                 },
                  render_nil: true,
                  if: ->(_) {
-                   !represented.is_milestone?
+                   !represented.milestone?
                  },
                  writeable: true
 
@@ -385,14 +406,9 @@ module API
                  getter: ->(*) do
                    datetime_formatter.format_date(represented.due_date, allow_nil: true)
                  end,
-                 setter: ->(fragment:, **) {
-                   represented.due_date = datetime_formatter.parse_date(fragment,
-                                                                        'dueDate',
-                                                                        allow_nil: true)
-                 },
                  render_nil: true,
                  if: ->(_) {
-                   !represented.is_milestone?
+                   !represented.milestone?
                  },
                  writeable: true
 
@@ -401,16 +417,9 @@ module API
                  getter: ->(*) do
                    datetime_formatter.format_date(represented.due_date, allow_nil: true)
                  end,
-                 setter: ->(fragment:, **) {
-                   new_date = datetime_formatter.parse_date(fragment,
-                                                            'date',
-                                                            allow_nil: true)
-
-                   represented.due_date = represented.start_date = new_date
-                 },
                  render_nil: true,
-                 if: ->(_) {
-                   represented.is_milestone?
+                 if: ->(options) {
+                   represented.milestone?
                  },
                  writeable: true
 
@@ -433,11 +442,11 @@ module API
                    current_user_allowed_to(:view_time_entries, context: represented.project)
                  }
 
-#        property :done_ratio,
-#                 as: :percentageDone,
-#                 render_nil: true,
-#                 writeable: true,
-#                 if: ->(*) { Setting.work_package_done_ratio != 'disabled' }
+        property :done_ratio,
+                 as: :percentageDone,
+                 render_nil: true,
+                 writeable: true,
+                 if: ->(*) { Setting.work_package_done_ratio != 'disabled' }
 
         property :created_at,
                  exec_context: :decorator,
@@ -501,6 +510,26 @@ module API
 
         def visible_children
           @visible_children ||= represented.children.select(&:visible?)
+        end
+
+        def date=(value)
+          new_date = datetime_formatter.parse_date(value,
+                                                   'date',
+                                                   allow_nil: true)
+
+          represented.due_date = represented.start_date = new_date
+        end
+
+        def due_date=(value)
+          represented.due_date = datetime_formatter.parse_date(value,
+                                                               'dueDate',
+                                                               allow_nil: true)
+        end
+
+        def start_date=(value)
+          represented.start_date = datetime_formatter.parse_date(value,
+                                                                 'startDate',
+                                                                 allow_nil: true)
         end
 
         self.to_eager_load = [{ children: { project: :enabled_modules } },
