@@ -385,6 +385,11 @@ module API
                    datetime_formatter.format_duration_from_hours(represented.estimated_hours,
                                                                  allow_nil: true)
                  end,
+                 setter: ->(fragment:, **) do
+                   represented.estimated_hours = datetime_formatter.parse_duration_to_hours(fragment,
+                                                                                            'estimatedTime',
+                                                                                            allow_nil: true)
+                 end,
                  render_nil: true,
                  writeable: true
 
@@ -406,10 +411,13 @@ module API
 
         property :created_at,
                  exec_context: :decorator,
-                 getter: ->(*) { datetime_formatter.format_datetime(represented.created_at) }
+                 getter: ->(*) { datetime_formatter.format_datetime(represented.created_at) },
+                 writeable: false
+
         property :updated_at,
                  exec_context: :decorator,
-                 getter: ->(*) { datetime_formatter.format_datetime(represented.updated_at) }
+                 getter: ->(*) { datetime_formatter.format_datetime(represented.updated_at) },
+                 writeable: false
 
         property :watchers,
                  embedded: true,

@@ -439,7 +439,7 @@ describe ::API::V3::Utilities::CustomFieldInjector do
     let(:value) { '' }
     let(:user) { FactoryGirl.build_stubbed(:user) }
     let(:typed_value) { value }
-    subject { "{ \"_links\": #{modified_class.new(represented, current_user: user).to_json} }" }
+    subject { modified_class.new(represented, current_user: user).to_json }
 
     before do
       allow(represented).to receive(:custom_value_for).with(custom_field).and_return(custom_value)
@@ -459,6 +459,7 @@ describe ::API::V3::Utilities::CustomFieldInjector do
 
       context 'value is nil' do
         let(:value) { nil }
+        let(:typed_value) { nil }
 
         it_behaves_like 'has an empty link' do
           let(:link) { cf_path }

@@ -41,10 +41,9 @@ module API
         attr_accessor :action
 
         def payload_representer
-          WorkPackageRepresenter
+          WorkPackagePayloadRepresenter
             .create_class(represented)
-            .new(represented)
-            .extend(API::Utilities::PayloadRepresenter)
+            .new(represented, current_user: current_user)
         end
 
         def schema_representer

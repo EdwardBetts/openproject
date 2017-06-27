@@ -228,17 +228,17 @@ module API
           setter = link_value_setter_for(custom_field, name, expected_namespace)
           getter = embedded_link_value_getter(custom_field)
 
-          if custom_field.multi_value?
-            @class.resources property_name(custom_field.id),
-                             link: link,
-                             setter: setter,
-                             getter: getter
-          else
-            @class.resource property_name(custom_field.id),
-                            link: link,
-                            setter: setter,
-                            getter: getter
-          end
+          method = if custom_field.multi_value?
+                     :resources
+                   else
+                     :resource
+                   end
+
+          @class.send(method,
+                      property_name(custom_field.id),
+                      link: link,
+                      setter: setter,
+                      getter: getter)
         end
 
         def link_value_getter_for(custom_field, path_method)
