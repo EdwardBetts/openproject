@@ -39,48 +39,21 @@ module API
 
         include API::Decorators::LinkedResource
 
-        resource :project,
-                 getter: ->(*) {
-                   # TODO: why do I need that when I have skip_render defined as well
-                   return unless represented.project
+        associated_resource :project,
+                            setter: ->(fragment:, **) {
+                              id = id_from_href "projects", fragment['href']
 
-                   API::V3::Projects::ProjectRepresenter.new(represented.project, current_user: current_user)
-                 },
-                 setter: ->(fragment:, **) {
-                   id = id_from_href "projects", fragment['href']
+                              id = if id.to_i.nonzero?
+                                     id # return numerical ID
+                                   else
+                                     Project.where(identifier: id).pluck(:id).first # lookup Project by identifier
+                                   end
 
-                   id = if id.to_i.nonzero?
-                          id # return numerical ID
-                        else
-                          Project.where(identifier: id).pluck(:id).first # lookup Project by identifier
-                        end
-
-                   represented.project_id = id if id
-                 },
-                 link: ->(*) {
-                   if represented.project
-                     {
-                       href: api_v3_paths.project(represented.project.id),
-                       title: represented.project.name
-                     }
-                   else
-                     {
-                       href: nil
-                     }
-                   end
-                 },
-                 skip_render: ->(*) {
-                   !embed_links || represented.project.nil?
-                 }
-
-        links :columns do
-          represented.columns.map do |column|
-            {
-              href: api_v3_paths.query_column(convert_attribute(column.name)),
-              title: column.caption
-            }
-          end
-        end
+                              represented.project_id = id if id
+                            },
+                            skip_render: ->(*) {
+                              !embed_links || represented.project.nil?
+                            }
 
         link :results do
           path = if represented.project
@@ -222,32 +195,32 @@ module API
                    !embed_links
                  }
 
-        resources :columns,
-                  getter: ->(*) {
-                    represented.columns.map do |column|
-                      ::API::V3::Queries::Columns::QueryColumnsFactory.create(column)
-                    end
-                  },
-                  setter: ->(fragment:, **) {
-                    columns = Array(fragment).map do |column|
-                      name = id_from_href "queries/columns", column['href']
+        associated_resources :columns,
+                             getter: ->(*) {
+                               represented.columns.map do |column|
+                                 ::API::V3::Queries::Columns::QueryColumnsFactory.create(column)
+                               end
+                             },
+                             setter: ->(fragment:, **) {
+                               columns = Array(fragment).map do |column|
+                                 name = id_from_href "queries/columns", column['href']
 
-                      ::API::Utilities::PropertyNameConverter.to_ar_name(name, context: WorkPackage.new) if name
-                    end
+                                 ::API::Utilities::PropertyNameConverter.to_ar_name(name, context: WorkPackage.new) if name
+                               end
 
-                    represented.column_names = columns.map(&:to_sym).compact if fragment
-                  },
-                  link: ->(*) {
-                    represented.columns.map do |column|
-                      {
-                        href: api_v3_paths.query_column(convert_attribute(column.name)),
-                        title: column.caption
-                      }
-                    end
-                  },
-                  skip_render: ->(*) {
-                    !embed_links
-                  }
+                               represented.column_names = columns.map(&:to_sym).compact if fragment
+                             },
+                             link: ->(*) {
+                               represented.columns.map do |column|
+                                 {
+                                   href: api_v3_paths.query_column(convert_attribute(column.name)),
+                                   title: column.caption
+                                 }
+                               end
+                             },
+                             skip_render: ->(*) {
+                               !embed_links
+                             }
 
         property :starred,
                  writeable: true

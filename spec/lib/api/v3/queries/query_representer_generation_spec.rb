@@ -33,7 +33,7 @@ describe ::API::V3::Queries::QueryRepresenter do
 
   let(:query) { FactoryGirl.build_stubbed(:query, project: project) }
   let(:project) { FactoryGirl.build_stubbed(:project) }
-  let(:user) { double('current_user') }
+  let(:user) { double('current_user', allowed_to?: true) }
   let(:representer) do
     described_class.new(query, current_user: user, embed_links: true)
   end
@@ -395,7 +395,7 @@ describe ::API::V3::Queries::QueryRepresenter do
       end
 
       context 'when not starred' do
-        let(:permissions) { [:star, :unstar] }
+        let(:permissions) { %i(star unstar) }
         before do
           allow(query)
             .to receive(:starred)
@@ -423,7 +423,7 @@ describe ::API::V3::Queries::QueryRepresenter do
       end
 
       context 'when starred' do
-        let(:permissions) { [:star, :unstar] }
+        let(:permissions) { %i(star unstar) }
         before do
           allow(query)
             .to receive(:starred)

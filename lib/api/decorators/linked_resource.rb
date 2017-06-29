@@ -118,17 +118,19 @@ module API
                                 v3_path: name,
                                 getter: associated_resource_default_getter(name, representer),
                                 setter: associated_resource_default_setter(name, v3_path),
-                                link: associated_resource_default_link(name, v3_path))
+                                link: associated_resource_default_link(name, v3_path),
+                                skip_render: -> { false })
 
           resource(as,
                    getter: getter,
                    setter: setter,
-                   link: link)
+                   link: link,
+                   skip_render: skip_render)
         end
 
         def associated_resource_default_getter(name,
                                                representer)
-          representer ||= "::API::V3::#{name.to_s.pluralize.camelize}::#{name.to_s.camelize}Representer".constantize
+          representer ||= default_representer(name)
 
           ->(*) {
             return unless represented.send(name)
@@ -155,6 +157,62 @@ module API
                    property_name: name)
               .to_hash
           }
+        end
+
+        def associated_resources(name,
+                                 as: name,
+                                 representer: nil,
+                                 v3_path: name,
+                                 getter: associated_resources_default_getter(name, representer),
+                                 setter: associated_resources_default_setter(name, v3_path),
+                                 link: associated_resources_default_link(name, v3_path),
+                                 skip_render: -> { false })
+
+          resources(as,
+                    getter: getter,
+                    setter: setter,
+                    link: link,
+                    skip_render: skip_render)
+        end
+
+        def associated_resources_default_getter(name,
+                                                representer)
+
+          representer ||= default_representer(name)
+
+          ->(*) {
+            return unless represented.send(name)
+
+            represented.send(name).map do |associated|
+              representer.new(associated, current_user: current_user)
+            end
+          }
+        end
+
+        def associated_resources_default_setter(name, v3_path)
+          ->(fragment:, **) {
+            link = ::API::Decorators::LinkObject.new(represented,
+                                                     path: v3_path,
+                                                     property_name: name)
+
+            link.from_hash(fragment)
+          }
+        end
+
+        def associated_resources_default_link(name, v3_path)
+          ->(*) {
+            represented.send(name).map do |associated|
+              ::API::Decorators::LinkObject
+                .new(represented,
+                     path: v3_path,
+                     property_name: associated.name)
+                .to_hash
+            end
+          }
+        end
+
+        def default_representer(name)
+          "::API::V3::#{name.to_s.pluralize.camelize}::#{name.to_s.camelize}Representer".constantize
         end
       end
     end
