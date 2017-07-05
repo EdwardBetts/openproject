@@ -55,15 +55,15 @@ module API
       end
 
       def link_render_block
-        ->(input, _options) {
+        ->(input, _options) do
           input.reject do |link|
             link.rel && !representable_attrs[link.rel.to_s]
           end
-        }
+        end
       end
 
       def nested_payload_block
-        ->(input, _options) {
+        ->(input, _options) do
           if input.is_a?(::API::Decorators::Single)
             input.extend(::API::Utilities::PayloadRepresenter)
           elsif input.is_a?(Array) && input.all? { |rep| rep.is_a? ::API::Decorators::Single }
@@ -71,7 +71,7 @@ module API
           else
             input
           end
-        }
+        end
       end
     end
   end

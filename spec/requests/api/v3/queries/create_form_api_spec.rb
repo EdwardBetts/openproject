@@ -365,8 +365,8 @@ describe "POST /api/v3/queries/form", type: :request do
 
     it 'has the columns set' do
       sort_by = [
-        { "href" => "/api/v3/queries/sort_bys/id-desc", "title"=>"ID (Descending)" },
-        { "href" => "/api/v3/queries/sort_bys/assignee-asc", "title"=>"Assignee (Ascending)" }
+        { "href" => "/api/v3/queries/sort_bys/id-desc", "title" => "ID (Descending)" },
+        { "href" => "/api/v3/queries/sort_bys/assignee-asc", "title" => "Assignee (Ascending)" }
       ]
 
       expect(form.dig("_embedded", "payload", "_links", "sortBy")).to eq sort_by

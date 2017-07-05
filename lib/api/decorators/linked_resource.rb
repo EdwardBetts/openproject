@@ -135,25 +135,25 @@ module API
                                                representer)
           representer ||= default_representer(name)
 
-          ->(*) {
+          ->(*) do
             return unless represented.send(name)
 
             representer.new(represented.send(name), current_user: current_user)
-          }
+          end
         end
 
         def associated_resource_default_setter(name, v3_path)
-          ->(fragment:, **) {
+          ->(fragment:, **) do
             link = ::API::Decorators::LinkObject.new(represented,
                                                      path: v3_path,
                                                      property_name: name)
 
             link.from_hash(fragment)
-          }
+          end
         end
 
         def associated_resource_default_link(name, v3_path, skip_render, link_title_attribute)
-          ->(*) {
+          ->(*) do
             next if instance_exec(&skip_render)
 
             ::API::Decorators::LinkObject
@@ -162,7 +162,7 @@ module API
                    property_name: name,
                    title_attribute: link_title_attribute)
               .to_hash
-          }
+          end
         end
 
         def associated_resources(name,
@@ -187,27 +187,27 @@ module API
 
           representer ||= default_representer(name)
 
-          ->(*) {
+          ->(*) do
             return unless represented.send(name)
 
             represented.send(name).map do |associated|
               representer.new(associated, current_user: current_user)
             end
-          }
+          end
         end
 
         def associated_resources_default_setter(name, v3_path)
-          ->(fragment:, **) {
+          ->(fragment:, **) do
             link = ::API::Decorators::LinkObject.new(represented,
                                                      path: v3_path,
                                                      property_name: name)
 
             link.from_hash(fragment)
-          }
+          end
         end
 
         def associated_resources_default_link(name, v3_path, skip_render, link_title_attribute)
-          ->(*) {
+          ->(*) do
             next if instance_exec(&skip_render)
 
             represented.send(name).map do |associated|
@@ -218,7 +218,7 @@ module API
                      title_attribute: link_title_attribute)
                 .to_hash
             end
-          }
+          end
         end
 
         def default_representer(name)
