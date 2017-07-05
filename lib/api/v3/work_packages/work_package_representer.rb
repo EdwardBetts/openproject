@@ -93,7 +93,8 @@ module API
         end
 
         link :logTime do
-          next unless current_user_allowed_to(:log_time, context: represented.project)
+          next unless current_user_allowed_to(:log_time, context: represented.project) &&
+                      represented.id
           {
             href: new_work_package_time_entry_path(represented),
             type: 'text/html',
@@ -102,7 +103,8 @@ module API
         end
 
         link :move do
-          next unless current_user_allowed_to(:move_work_packages, context: represented.project)
+          next unless current_user_allowed_to(:move_work_packages, context: represented.project) &&
+                      represented.id
 
           {
             href: new_work_package_move_path(represented),
@@ -112,7 +114,8 @@ module API
         end
 
         link :copy do
-          next unless current_user_allowed_to(:move_work_packages, context: represented.project)
+          next unless current_user_allowed_to(:move_work_packages, context: represented.project) &&
+                      represented.id
           {
             href: new_work_package_move_path(represented, copy: true, ids: [represented.id]),
             type: 'text/html',
@@ -121,7 +124,9 @@ module API
         end
 
         link :pdf do
-          next unless current_user_allowed_to(:export_work_packages, context: represented.project)
+          next unless current_user_allowed_to(:export_work_packages, context: represented.project) &&
+                      represented.id
+
           {
             href: work_package_path(id: represented.id, format: :pdf),
             type: 'application/pdf',
@@ -131,7 +136,8 @@ module API
 
         link :atom do
           next unless Setting.feeds_enabled? &&
-                      current_user_allowed_to(:export_work_packages, context: represented.project)
+                      current_user_allowed_to(:export_work_packages, context: represented.project) &&
+                      represented.id
           {
             href: work_package_path(id: represented.id, format: :atom),
             type: 'application/rss+xml',
@@ -140,6 +146,8 @@ module API
         end
 
         link :available_relation_candidates do
+          next unless represented.id
+
           {
             href: "/api/v3/work_packages/#{represented.id}/available_relation_candidates",
             title: "Potential work packages to relate to"
@@ -292,7 +300,8 @@ module API
         end
 
         link :timeEntries do
-          next unless current_user_allowed_to(:view_time_entries, context: represented.project)
+          next unless current_user_allowed_to(:view_time_entries, context: represented.project) &&
+                      represented.id
           {
             href: work_package_time_entries_path(represented.id),
             type: 'text/html',
