@@ -156,7 +156,7 @@ module API
         end
 
         link :configureForm do
-          next unless current_user.admin?
+          next unless current_user.admin? && represented.type_id
           {
             href: edit_type_path(represented.type_id, tab: 'form_configuration'),
             type: 'text/html',
@@ -468,7 +468,9 @@ module API
 
         associated_resource :parent,
                             v3_path: :work_package,
-                            representer: ::API::V3::WorkPackages::WorkPackageRepresenter
+                            representer: ::API::V3::WorkPackages::WorkPackageRepresenter,
+                            skip_render: ->(*) { represented.parent && !represented.parent.visible? },
+                            link_title_attribute: :subject
 
         def _type
           'WorkPackage'

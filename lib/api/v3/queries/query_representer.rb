@@ -172,9 +172,12 @@ module API
                  setter: ->(fragment:, **) {
                    attr = id_from_href "queries/group_bys", fragment['href']
 
-                   if attr
-                     represented.group_by = ::API::Utilities::PropertyNameConverter.to_ar_name(attr, context: WorkPackage.new)
-                   end
+                   represented.group_by =
+                     if attr.nil?
+                       nil
+                     else
+                       ::API::Utilities::PropertyNameConverter.to_ar_name(attr, context: WorkPackage.new)
+                     end
                  },
                  link: ->(*) {
                    column = represented.group_by_column

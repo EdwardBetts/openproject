@@ -70,7 +70,7 @@ module API
                    exec_context: :decorator,
                    getter: getter,
                    setter: setter,
-                   if: show_if,
+                   if: ->(*) { embed_links && instance_exec(&show_if) },
                    skip_render: skip_render,
                    linked_resource: true,
                    embedded: embedded,
@@ -116,10 +116,11 @@ module API
                                 as: name,
                                 representer: nil,
                                 v3_path: name,
+                                skip_render: ->(*) { false },
+                                link_title_attribute: :name,
                                 getter: associated_resource_default_getter(name, representer),
                                 setter: associated_resource_default_setter(name, v3_path),
-                                link: associated_resource_default_link(name, v3_path),
-                                skip_render: -> { false })
+                                link: associated_resource_default_link(name, v3_path, skip_render, link_title_attribute))
 
           resource(as,
                    getter: getter,
@@ -149,12 +150,15 @@ module API
           }
         end
 
-        def associated_resource_default_link(name, v3_path)
+        def associated_resource_default_link(name, v3_path, skip_render, link_title_attribute)
           ->(*) {
+            next if instance_exec(&skip_render)
+
             ::API::Decorators::LinkObject
               .new(represented,
                    path: v3_path,
-                   property_name: name)
+                   property_name: name,
+                   title_attribute: link_title_attribute)
               .to_hash
           }
         end
@@ -163,10 +167,11 @@ module API
                                  as: name,
                                  representer: nil,
                                  v3_path: name,
+                                 skip_render: -> { false },
+                                 link_title_attribute: :name,
                                  getter: associated_resources_default_getter(name, representer),
                                  setter: associated_resources_default_setter(name, v3_path),
-                                 link: associated_resources_default_link(name, v3_path),
-                                 skip_render: -> { false })
+                                 link: associated_resources_default_link(name, v3_path, skip_render, link_title_attribute))
 
           resources(as,
                     getter: getter,
@@ -199,13 +204,16 @@ module API
           }
         end
 
-        def associated_resources_default_link(name, v3_path)
+        def associated_resources_default_link(name, v3_path, skip_render, link_title_attribute)
           ->(*) {
+            next if instance_exec(&skip_render)
+
             represented.send(name).map do |associated|
               ::API::Decorators::LinkObject
                 .new(represented,
                      path: v3_path,
-                     property_name: associated.name)
+                     property_name: associated.name,
+                     title_attribute: link_title_attribute)
                 .to_hash
             end
           }
