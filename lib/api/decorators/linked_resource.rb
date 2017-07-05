@@ -39,19 +39,21 @@ module API
         base.extend ClassMethods
       end
 
-      def from_hash(hash, *)
+      def from_hash(hash, *args)
         return super unless hash['_links']
+
+        copied_hash = hash.deep_dup
 
         representable_attrs.find_all do |dfn|
           next unless dfn[:linked_resource]
           name = dfn[:as] ? dfn[:as].(nil) : dfn.name
-          fragment = hash['_links'].delete(name)
+          fragment = copied_hash['_links'].delete(name)
           next unless fragment
 
-          hash[name] = fragment
+          copied_hash[name] = fragment
         end
 
-        super
+        super(copied_hash, *args)
       end
 
       module ClassMethods
@@ -70,8 +72,8 @@ module API
                    exec_context: :decorator,
                    getter: getter,
                    setter: setter,
-                   if: ->(*) { embed_links && instance_exec(&show_if) },
-                   skip_render: skip_render,
+                   if: show_if,
+                   skip_render: ->(*) { !embed_links || (skip_render && instance_exec(&skip_render)) },
                    linked_resource: true,
                    embedded: embedded,
                    writeable: writeable

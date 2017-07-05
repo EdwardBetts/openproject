@@ -385,11 +385,6 @@ module API
                    datetime_formatter.format_duration_from_hours(represented.estimated_hours,
                                                                  allow_nil: true)
                  end,
-                 setter: ->(fragment:, **) do
-                   represented.estimated_hours = datetime_formatter.parse_duration_to_hours(fragment,
-                                                                                            'estimatedTime',
-                                                                                            allow_nil: true)
-                 end,
                  render_nil: true,
                  writeable: true
 
@@ -528,6 +523,12 @@ module API
           represented.start_date = datetime_formatter.parse_date(value,
                                                                  'startDate',
                                                                  allow_nil: true)
+        end
+
+        def estimated_time=(value)
+          represented.estimated_hours = datetime_formatter.parse_duration_to_hours(value,
+                                                                                   'estimatedTime',
+                                                                                   allow_nil: true)
         end
 
         self.to_eager_load = [{ children: { project: :enabled_modules } },
