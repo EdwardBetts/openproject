@@ -35,16 +35,14 @@ module API
         include API::Decorators::LinkedResource
 
         class << self
-          def create_class(work_package, embed_links: false)
+          def create_class(work_package)
             injector_class = ::API::V3::Utilities::CustomFieldInjector
             injector_class.create_value_representer(work_package,
-                                                    self,
-                                                    embed_links: embed_links)
+                                                    self)
           end
 
           def create(work_package, current_user:, embed_links: false)
-            create_class(work_package,
-                         embed_links: embed_links)
+            create_class(work_package)
               .new(work_package,
                    current_user: current_user,
                    embed_links: embed_links)

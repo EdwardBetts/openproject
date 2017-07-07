@@ -263,7 +263,7 @@ describe ::API::V3::Utilities::CustomFieldInjector do
     let(:typed_value) { raw_value }
     let(:value) { '' }
     let(:current_user) { FactoryGirl.build(:user) }
-    subject { modified_class.new(represented, current_user: current_user).to_json }
+    subject { modified_class.new(represented, current_user: current_user, embed_links: true).to_json }
 
     before do
       # should only be called when building links

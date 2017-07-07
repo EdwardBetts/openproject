@@ -65,7 +65,7 @@ module API
         }.freeze
 
         class << self
-          def create_value_representer(customizable, representer, embed_links: true)
+          def create_value_representer(customizable, representer)
             new_representer_class_with(representer, customizable) do |injector|
               customizable.available_custom_fields.each do |custom_field|
                 injector.inject_value(custom_field)
@@ -211,9 +211,9 @@ module API
                         required: custom_field.is_required,
                         has_default: custom_field.default_value.present?,
                         writable: true,
-                        min_length: (custom_field.min_length if custom_field.min_length > 0),
-                        max_length: (custom_field.max_length if custom_field.max_length > 0),
-                        regular_expression: (custom_field.regexp unless custom_field.regexp.blank?)
+                        min_length: cf_min_length(custom_field),
+                        max_length: cf_max_length(custom_field),
+                        regular_expression: cf_regexp(custom_field)
         end
 
         def path_method_for(custom_field)
@@ -269,12 +269,10 @@ module API
         def inject_embedded_link_value(custom_field)
           getter = embedded_link_value_getter(custom_field)
 
-          @class.property(
-            property_name(custom_field.id),
-            embedded: true,
-            exec_context: :decorator,
-            getter: getter
-          )
+          @class.property property_name(custom_field.id),
+                          embedded: true,
+                          exec_context: :decorator,
+                          getter: getter
         end
 
         def embedded_link_value_getter(custom_field)
@@ -341,6 +339,19 @@ module API
             "#{api_v3_paths.principals}?filters=#{query}"
           }
         end
+
+        def cf_min_length(custom_field)
+          custom_field.min_length if custom_field.min_length > 0
+        end
+
+        def cf_max_length(custom_field)
+          custom_field.max_length if custom_field.max_length > 0
+        end
+
+        def cf_regexp(custom_field)
+          custom_field.regexp unless custom_field.regexp.blank?
+        end
+
       end
     end
   end
