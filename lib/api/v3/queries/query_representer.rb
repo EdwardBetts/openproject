@@ -51,6 +51,9 @@ module API
 
                               represented.project_id = id if id
                             },
+                            skip_link: ->(*) {
+                              represented.project.nil?
+                            },
                             skip_render: ->(*) {
                               !embed_links || represented.project.nil?
                             }

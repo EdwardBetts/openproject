@@ -353,6 +353,9 @@ describe ::API::V3::WorkPackages::WorkPackagePayloadRepresenter do
 
         before do
           work_package.parent = parent
+          allow(parent)
+            .to receive(:visible?)
+            .and_return(true)
         end
 
         it_behaves_like 'linked property' do

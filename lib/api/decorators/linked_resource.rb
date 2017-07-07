@@ -119,10 +119,11 @@ module API
                                 representer: nil,
                                 v3_path: name,
                                 skip_render: ->(*) { false },
+                                skip_link: skip_render,
                                 link_title_attribute: :name,
                                 getter: associated_resource_default_getter(name, representer),
                                 setter: associated_resource_default_setter(name, v3_path),
-                                link: associated_resource_default_link(name, v3_path, skip_render, link_title_attribute))
+                                link: associated_resource_default_link(name, v3_path, skip_link, link_title_attribute))
 
           resource(as,
                    getter: getter,
@@ -136,7 +137,7 @@ module API
           representer ||= default_representer(name)
 
           ->(*) do
-            return unless represented.send(name)
+            return unless represented.send(name) && embed_links
 
             representer.new(represented.send(name), current_user: current_user)
           end
@@ -152,9 +153,9 @@ module API
           end
         end
 
-        def associated_resource_default_link(name, v3_path, skip_render, link_title_attribute)
+        def associated_resource_default_link(name, v3_path, skip_link, link_title_attribute)
           ->(*) do
-            next if instance_exec(&skip_render)
+            next if instance_exec(&skip_link)
 
             ::API::Decorators::LinkObject
               .new(represented,
@@ -170,10 +171,11 @@ module API
                                  representer: nil,
                                  v3_path: name,
                                  skip_render: -> { false },
+                                 skip_link: skip_render,
                                  link_title_attribute: :name,
                                  getter: associated_resources_default_getter(name, representer),
                                  setter: associated_resources_default_setter(name, v3_path),
-                                 link: associated_resources_default_link(name, v3_path, skip_render, link_title_attribute))
+                                 link: associated_resources_default_link(name, v3_path, skip_link, link_title_attribute))
 
           resources(as,
                     getter: getter,
@@ -206,9 +208,9 @@ module API
           end
         end
 
-        def associated_resources_default_link(name, v3_path, skip_render, link_title_attribute)
+        def associated_resources_default_link(name, v3_path, skip_link, link_title_attribute)
           ->(*) do
-            next if instance_exec(&skip_render)
+            next if instance_exec(&skip_link)
 
             represented.send(name).map do |associated|
               ::API::Decorators::LinkObject
