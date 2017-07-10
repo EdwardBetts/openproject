@@ -403,11 +403,17 @@ module API
 
         property :created_at,
                  exec_context: :decorator,
-                 getter: ->(*) { datetime_formatter.format_datetime(represented.created_at) }
+                 getter: ->(*) {
+                   next unless represented.created_at
+                   datetime_formatter.format_datetime(represented.created_at)
+                 }
 
         property :updated_at,
                  exec_context: :decorator,
-                 getter: ->(*) { datetime_formatter.format_datetime(represented.updated_at) }
+                 getter: ->(*) {
+                   next unless represented.updated_at
+                   datetime_formatter.format_datetime(represented.updated_at)
+                 }
 
         property :watchers,
                  embedded: true,

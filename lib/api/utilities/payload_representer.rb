@@ -31,27 +31,38 @@
 module API
   module Utilities
     module PayloadRepresenter
-      def to_hash(*)
-        writeable_attr = writeable_attributes(represented)
+      def self.included(base)
+        base.extend(ClassMethods)
 
-        representable_attrs.each do |property|
-          property[:render_filter] << nested_payload_block
-
-          as = property[:as].()
+        base.representable_attrs.each do |property|
+          add_filter(property, nested_payload_block)
 
           if property.name == 'links'
-            property[:render_filter] << link_render_block
-          elsif !writeable_attr.include?(as) || property[:writeable] == false
+            add_filter(property, link_render_block)
+          elsif property[:writeable] == false
             property.merge!(readable: false)
+          else
+            add_filter(property, unwriteable_property_filter)
           end
         end
-
-        super
       end
 
-      def link_render_block
-        ->(input, _options) do
-          writeable_attr = writeable_attributes(represented)
+      def self.unwriteable_property_filter
+        ->(input, options) do
+          writeable_attr = options[:decorator].writeable_attributes
+
+          as = options[:binding][:as].()
+          if writeable_attr.include?(as)
+            input
+          else
+            ::Representable::Pipeline::Stop
+          end
+        end
+      end
+
+      def self.link_render_block
+        ->(input, options) do
+          writeable_attr = options[:decorator].writeable_attributes
 
           input.reject do |link|
             link.rel && !writeable_attr.include?(link.rel.to_s)
@@ -59,7 +70,7 @@ module API
         end
       end
 
-      def nested_payload_block
+      def self.nested_payload_block
         ->(input, _options) do
           if input.is_a?(::API::Decorators::Single)
             input.extend(::API::Utilities::PayloadRepresenter)
@@ -71,23 +82,39 @@ module API
         end
       end
 
+      def self.add_filter(property, filter)
+        property.merge!(render_filter: filter)
+      end
+
       def contract?(represented)
         contract_name(represented).present?
       end
 
-      def writeable_attributes(represented)
-        contract = contract_name(represented)
+      def writeable_attributes
+        @writeable_attributes ||= begin
+          contract = contract_name(represented)
 
-        if contract
-          contract
-            .constantize
-            .new(represented, current_user: current_user)
-            .writable_attributes
-            .map { |name| ::API::Utilities::PropertyNameConverter.from_ar_name(name) }
-        else
-          representable_attrs.map do |property|
-            property[:as].()
+          if contract
+            contract
+              .constantize
+              .new(represented, current_user: current_user)
+              .writable_attributes
+              .map { |name| ::API::Utilities::PropertyNameConverter.from_ar_name(name) }
+          else
+            representable_attrs.map do |property|
+              property[:as].()
+            end
           end
+        end
+      end
+
+      module ClassMethods
+        def create_class(work_package)
+          new_class = super
+
+          new_class.send(:include, ::API::Utilities::PayloadRepresenter)
+
+          new_class
         end
       end
 

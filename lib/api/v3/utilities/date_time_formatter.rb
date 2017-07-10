@@ -38,6 +38,8 @@ module API
         end
 
         def self.parse_date(value, property_name, allow_nil: false)
+          return nil if value.nil? && allow_nil
+
           date_and_time = parse_datetime(value, property_name, allow_nil: allow_nil)
 
           date_only = date_and_time.to_date
