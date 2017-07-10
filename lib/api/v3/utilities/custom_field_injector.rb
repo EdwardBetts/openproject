@@ -351,7 +351,6 @@ module API
         def cf_regexp(custom_field)
           custom_field.regexp unless custom_field.regexp.blank?
         end
-
       end
     end
   end
