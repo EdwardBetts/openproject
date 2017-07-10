@@ -544,6 +544,10 @@ module API
                                                                      allow_nil: true)
         end
 
+        def spent_time=(value)
+          #noop
+        end
+
         self.to_eager_load = [{ children: { project: :enabled_modules } },
                               { parent: { project: :enabled_modules } },
                               { project: %i(enabled_modules work_package_custom_fields) },
