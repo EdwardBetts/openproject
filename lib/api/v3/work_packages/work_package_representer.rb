@@ -545,7 +545,7 @@ module API
         end
 
         def spent_time=(value)
-          #noop
+          # noop
         end
 
         self.to_eager_load = [{ children: { project: :enabled_modules } },
