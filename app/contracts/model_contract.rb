@@ -40,14 +40,14 @@ class ModelContract < Reform::Contract
     @attribute_validations ||= []
   end
 
-  def self.attribute(*attributes, &block)
-    attributes.each do |attribute|
-      property attribute
-    end
+  def self.attribute(attribute, options = {}, &block)
+    property attribute
 
-    writable_attributes.concat attributes.map(&:to_s)
-    # allow the _id variant as well
-    writable_attributes.concat(attributes.map { |a| "#{a}_id" })
+    unless options[:writeable] == false
+      writable_attributes << attribute.to_s
+      # allow the _id variant as well
+      writable_attributes << "#{attribute}_id"
+    end
 
     if block
       attribute_validations << block

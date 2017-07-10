@@ -328,19 +328,16 @@ module API
         end
 
         property :id,
-                 render_nil: true,
-                 writeable: false
+                 render_nil: true
 
         property :lock_version,
                  render_nil: true,
                  getter: ->(*) {
                    lock_version.to_i
-                 },
-                 writeable: true
+                 }
 
         property :subject,
-                 render_nil: true,
-                 writeable: true
+                 render_nil: true
 
         property :description,
                  exec_context: :decorator,
@@ -350,8 +347,7 @@ module API
                  setter: ->(fragment:, **) {
                    represented.description = fragment['raw']
                  },
-                 render_nil: true,
-                 writeable: true
+                 render_nil: true
 
         property :start_date,
                  exec_context: :decorator,
@@ -361,8 +357,7 @@ module API
                  render_nil: true,
                  if: ->(_) {
                    !represented.milestone?
-                 },
-                 writeable: true
+                 }
 
         property :due_date,
                  exec_context: :decorator,
@@ -372,8 +367,7 @@ module API
                  render_nil: true,
                  if: ->(_) {
                    !represented.milestone?
-                 },
-                 writeable: true
+                 }
 
         property :date,
                  exec_context: :decorator,
@@ -383,8 +377,7 @@ module API
                  render_nil: true,
                  if: ->(*) {
                    represented.milestone?
-                 },
-                 writeable: true
+                 }
 
         property :estimated_time,
                  exec_context: :decorator,
@@ -392,15 +385,13 @@ module API
                    datetime_formatter.format_duration_from_hours(represented.estimated_hours,
                                                                  allow_nil: true)
                  end,
-                 render_nil: true,
-                 writeable: true
+                 render_nil: true
 
         property :spent_time,
                  exec_context: :decorator,
                  getter: ->(*) do
                    datetime_formatter.format_duration_from_hours(represented.spent_hours)
                  end,
-                 writeable: false,
                  if: ->(_) {
                    current_user_allowed_to(:view_time_entries, context: represented.project)
                  }
@@ -408,18 +399,15 @@ module API
         property :done_ratio,
                  as: :percentageDone,
                  render_nil: true,
-                 writeable: true,
                  if: ->(*) { Setting.work_package_done_ratio != 'disabled' }
 
         property :created_at,
                  exec_context: :decorator,
-                 getter: ->(*) { datetime_formatter.format_datetime(represented.created_at) },
-                 writeable: false
+                 getter: ->(*) { datetime_formatter.format_datetime(represented.created_at) }
 
         property :updated_at,
                  exec_context: :decorator,
-                 getter: ->(*) { datetime_formatter.format_datetime(represented.updated_at) },
-                 writeable: false
+                 getter: ->(*) { datetime_formatter.format_datetime(represented.updated_at) }
 
         property :watchers,
                  embedded: true,
@@ -536,6 +524,18 @@ module API
           represented.estimated_hours = datetime_formatter.parse_duration_to_hours(value,
                                                                                    'estimatedTime',
                                                                                    allow_nil: true)
+        end
+
+        def created_at=(value)
+          represented.created_at = datetime_formatter.parse_datetime(value,
+                                                                     'createdAt',
+                                                                     allow_nil: true)
+        end
+
+        def updated_at=(value)
+          represented.updated_at = datetime_formatter.parse_datetime(value,
+                                                                     'updatedAt',
+                                                                     allow_nil: true)
         end
 
         self.to_eager_load = [{ children: { project: :enabled_modules } },

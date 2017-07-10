@@ -34,6 +34,7 @@ module API
       class WorkPackagePayloadRepresenter < WorkPackageRepresenter
         include ::API::Utilities::PayloadRepresenter
 
+        # TODO move writeable calculation to contract
         property :done_ratio,
                  as: :percentageDone,
                  if: ->(*) { Setting.work_package_done_ratio == 'field' },

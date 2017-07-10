@@ -38,7 +38,8 @@ module WorkPackages
 
     attribute :subject
     attribute :description
-    attribute :start_date, :due_date
+    attribute :start_date
+    attribute :due_date
     attribute :status_id
     attribute :type_id
     attribute :priority_id

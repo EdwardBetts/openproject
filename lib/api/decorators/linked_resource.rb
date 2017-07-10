@@ -63,8 +63,7 @@ module API
                      link:,
                      show_if: ->(*) { true },
                      skip_render: nil,
-                     embedded: true,
-                     writeable: true)
+                     embedded: true)
 
           link(name, &link)
 
@@ -75,8 +74,7 @@ module API
                    if: show_if,
                    skip_render: ->(*) { !embed_links || (skip_render && instance_exec(&skip_render)) },
                    linked_resource: true,
-                   embedded: embedded,
-                   writeable: writeable
+                   embedded: embedded
         end
 
         def resources(name,
@@ -85,8 +83,7 @@ module API
                       link:,
                       show_if: ->(*) { true },
                       skip_render: nil,
-                      embedded: true,
-                      writeable: true)
+                      embedded: true)
 
           links(name, &link)
 
@@ -97,8 +94,7 @@ module API
                    if: show_if,
                    skip_render: skip_render,
                    linked_resource: true,
-                   embedded: embedded,
-                   writeable: writeable
+                   embedded: embedded
         end
 
         def resource_link(name,
@@ -115,17 +111,17 @@ module API
         end
 
         def associated_resource(name,
-                                as: name,
+                                as: nil,
                                 representer: nil,
                                 v3_path: name,
                                 skip_render: ->(*) { false },
                                 skip_link: skip_render,
                                 link_title_attribute: :name,
                                 getter: associated_resource_default_getter(name, representer),
-                                setter: associated_resource_default_setter(name, v3_path),
+                                setter: associated_resource_default_setter(name, as, v3_path),
                                 link: associated_resource_default_link(name, v3_path, skip_link, link_title_attribute))
 
-          resource(as,
+          resource((as || name),
                    getter: getter,
                    setter: setter,
                    link: link,
@@ -143,11 +139,13 @@ module API
           end
         end
 
-        def associated_resource_default_setter(name, v3_path)
+        def associated_resource_default_setter(name, as, v3_path)
           ->(fragment:, **) do
             link = ::API::Decorators::LinkObject.new(represented,
                                                      path: v3_path,
-                                                     property_name: name)
+                                                     property_name: as || name,
+                                                     getter: :"#{name}_id",
+                                                     setter: :"#{name}_id=")
 
             link.from_hash(fragment)
           end

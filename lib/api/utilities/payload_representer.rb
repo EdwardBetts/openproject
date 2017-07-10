@@ -31,33 +31,30 @@
 module API
   module Utilities
     module PayloadRepresenter
-      def representable_attrs
-        super.dup.reject! do |_key, binding|
-          binding[:writeable] == false
-        end
-      end
+      def to_hash(*)
+        writeable_attr = writeable_attributes(represented)
 
-      def representable_map(*)
-        writeable = super.dup.reject! do |binding|
-          binding[:writeable] == false
-        end
+        representable_attrs.each do |property|
+          property[:render_filter] << nested_payload_block
 
-        writeable.each do |binding|
-          binding[:render_filter] << nested_payload_block
-        end
-        links = writeable.detect { |binding| binding.name == 'links' }
+          as = property[:as].()
 
-        if links
-          links[:render_filter] << link_render_block
+          if property.name == 'links'
+            property[:render_filter] << link_render_block
+          elsif !writeable_attr.include?(as) || property[:writeable] == false
+            property.merge!(readable: false)
+          end
         end
 
-        writeable
+        super
       end
 
       def link_render_block
         ->(input, _options) do
+          writeable_attr = writeable_attributes(represented)
+
           input.reject do |link|
-            link.rel && !representable_attrs[link.rel.to_s]
+            link.rel && !writeable_attr.include?(link.rel.to_s)
           end
         end
       end
@@ -72,6 +69,46 @@ module API
             input
           end
         end
+      end
+
+      def contract?(represented)
+        contract_name(represented).present?
+      end
+
+      def writeable_attributes(represented)
+        contract = contract_name(represented)
+
+        if contract
+          contract
+            .constantize
+            .new(represented, current_user: current_user)
+            .writable_attributes
+            .map { |name| ::API::Utilities::PropertyNameConverter.from_ar_name(name) }
+        else
+          representable_attrs.map do |property|
+            property[:as].()
+          end
+        end
+      end
+
+      private
+
+      def contract_name(represented)
+        return nil unless represented
+
+        contract_namespace = represented.class.name.pluralize
+
+        return nil unless Object.const_defined?(contract_namespace)
+
+        contract_name = if represented.new_record?
+                          "CreateContract"
+                        else
+                          "UpdateContract"
+                        end
+
+        return nil unless contract_namespace.constantize.const_defined?(contract_name)
+
+        "#{contract_namespace}::#{contract_name}"
       end
     end
   end
