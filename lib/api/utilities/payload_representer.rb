@@ -72,13 +72,13 @@ module API
         property.merge!(render_filter: filter)
       end
 
-      def from_hash(hash)
+      def from_hash(hash, *args)
         # Prevent entries in _embedded from overriding anything in the _links section
         copied_hash = hash.deep_dup
 
         copied_hash.delete('_embedded')
 
-        super(copied_hash)
+        super(copied_hash, *args)
       end
 
       def contract?(represented)
