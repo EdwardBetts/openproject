@@ -82,16 +82,15 @@ module API
       end
 
       def contract?(represented)
-        contract_name(represented).present?
+        contract_class(represented).present?
       end
 
       def writeable_attributes
         @writeable_attributes ||= begin
-          contract = contract_name(represented)
+          contract = contract_class(represented)
 
           if contract
             contract
-              .constantize
               .new(represented, current_user: current_user)
               .writable_attributes
               .map { |name| ::API::Utilities::PropertyNameConverter.from_ar_name(name) }
@@ -115,12 +114,10 @@ module API
 
       private
 
-      def contract_name(represented)
-        return nil unless represented
+      def contract_class(represented)
+        return nil unless represented && represented.respond_to?(:new_record?)
 
         contract_namespace = represented.class.name.pluralize
-
-        return nil unless Object.const_defined?(contract_namespace)
 
         contract_name = if represented.new_record?
                           "CreateContract"
@@ -128,9 +125,11 @@ module API
                           "UpdateContract"
                         end
 
-        return nil unless contract_namespace.constantize.const_defined?(contract_name)
-
-        "#{contract_namespace}::#{contract_name}"
+        begin
+          "#{contract_namespace}::#{contract_name}".constantize
+        rescue NameError
+          nil
+        end
       end
     end
   end

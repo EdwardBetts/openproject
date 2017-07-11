@@ -88,6 +88,12 @@ describe ::API::V3::WorkPackages::WorkPackagePayloadRepresenter do
       end
 
       describe 'estimated hours' do
+        before do
+          allow(work_package)
+            .to receive(:leaf?)
+            .and_return(true)
+        end
+
         it { is_expected.to have_json_path('estimatedTime') }
         it do
           is_expected.to be_json_eql(work_package.estimated_hours.to_json)
@@ -106,6 +112,12 @@ describe ::API::V3::WorkPackages::WorkPackagePayloadRepresenter do
       end
 
       describe 'percentage done' do
+        before do
+          allow(work_package)
+            .to receive(:leaf?)
+            .and_return(true)
+        end
+
         context 'percentage done enabled' do
           it { is_expected.to have_json_path('percentageDone') }
           it { is_expected.to have_json_type(Integer).at_path('percentageDone') }
@@ -132,6 +144,10 @@ describe ::API::V3::WorkPackages::WorkPackagePayloadRepresenter do
           allow(work_package)
             .to receive(:milestone?)
             .and_return(false)
+
+          allow(work_package)
+            .to receive(:leaf?)
+            .and_return(true)
         end
 
         it_behaves_like 'has ISO 8601 date only' do
@@ -165,6 +181,10 @@ describe ::API::V3::WorkPackages::WorkPackagePayloadRepresenter do
           allow(work_package)
             .to receive(:milestone?)
             .and_return(false)
+
+          allow(work_package)
+            .to receive(:leaf?)
+            .and_return(true)
         end
 
         it_behaves_like 'has ISO 8601 date only' do
@@ -197,6 +217,10 @@ describe ::API::V3::WorkPackages::WorkPackagePayloadRepresenter do
         before do
           allow(work_package)
             .to receive(:milestone?)
+            .and_return(true)
+
+          allow(work_package)
+            .to receive(:leaf?)
             .and_return(true)
         end
 
