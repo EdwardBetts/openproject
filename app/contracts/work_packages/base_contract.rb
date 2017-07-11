@@ -113,6 +113,10 @@ module WorkPackages
       @can = WorkPackagePolicy.new(user)
     end
 
+    def writable_attributes
+      super + model.available_custom_fields.map { |cf| "custom_field_#{cf.id}" }
+    end
+
     private
 
     attr_reader :user,

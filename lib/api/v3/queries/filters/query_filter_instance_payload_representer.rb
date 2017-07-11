@@ -31,13 +31,12 @@
 module API
   module V3
     module Queries
-      class QueryPayloadRepresenter < QueryRepresenter
-        include ::API::Utilities::PayloadRepresenter
+      module Filters
+        class QueryFilterInstancePayloadRepresenter < QueryFilterInstanceRepresenter
+          include ::API::Utilities::PayloadRepresenter
 
-        def filters
-          represented.filters.map do |filter|
-            ::API::V3::Queries::Filters::QueryFilterInstancePayloadRepresenter
-              .new(filter)
+          def initialize(model)
+            super(model)
           end
         end
       end

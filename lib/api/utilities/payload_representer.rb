@@ -35,8 +35,6 @@ module API
         base.extend(ClassMethods)
 
         base.representable_attrs.each do |property|
-          add_filter(property, nested_payload_block)
-
           if property.name == 'links'
             add_filter(property, link_render_block)
           elsif property[:writeable] == false
@@ -70,20 +68,17 @@ module API
         end
       end
 
-      def self.nested_payload_block
-        ->(input, _options) do
-          if input.is_a?(::API::Decorators::Single)
-            input.extend(::API::Utilities::PayloadRepresenter)
-          elsif input.is_a?(Array) && input.all? { |rep| rep.is_a? ::API::Decorators::Single }
-            input.each { |rep| rep.extend ::API::Utilities::PayloadRepresenter }
-          else
-            input
-          end
-        end
-      end
-
       def self.add_filter(property, filter)
         property.merge!(render_filter: filter)
+      end
+
+      def from_hash(hash)
+        # Prevent entries in _embedded from overriding anything in the _links section
+        copied_hash = hash.deep_dup
+
+        copied_hash.delete('_embedded')
+
+        super(copied_hash)
       end
 
       def contract?(represented)
